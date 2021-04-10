@@ -1,0 +1,53 @@
+---
+title: "Упражнение №5"
+author: "Маркин Артем"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Вариант - 12
+
+1. Картограмма с таблицей стран мира по показателю из базы Всемирного банка (интерактивная картограмма из примера).
+2. Карта с маркерами или с радиусами, построенная по набору данных с Портала открытых данных РФ.
+
+Задание по варианту:
+WDI: любой показатель (Абонентская плата на мобильную сотовую связь (на 100 человек)) из раздела "Infrastructure" (Инфраструктура). Портал открытых данных: Сведения о местах нахождения многоквартирных жилых домов, в которых осуществлен капитальный ремонт, по Краснодарскому краю (id: 2308078236-18dom), взять только расположенные в городе Белореченск
+
+```{r, results='asis', cache=TRUE, warning=F, message=F}
+library('WDI')
+library('data.table')
+library('leaflet')
+suppressPackageStartupMessages(library('googleVis'))
+
+# Индикатор
+indicator.code <- 'IT.CEL.SETS.P2'
+
+DF <- read.csv('./data/IT.CEL.SETS.P2.csv', header = T, sep = ',')
+DF <- data.table(DF)
+
+# Коды стран iso2
+fileURL <- 'https://pkgstore.datahub.io/core/country-list/data_csv/data/d7c9d7cfb42cb69f4422dec222dbbaa8/data_csv.csv'
+all.iso2.country.codes <- read.csv(fileURL, stringsAsFactors = FALSE, na.strings = '.')
+
+# Убираем макрорегионы
+DF <- na.omit(DF[iso2c %in% all.iso2.country.codes$Code, ])
+
+# Объект таблица исходных данных
+g.tbl <- gvisTable(data = DF[, -'year'], options = list(width = 300, height = 400))
+
+# Объект интерактивная карта
+g.chart <- gvisGeoChart(data = DF, locationvar = 'iso2c',
+                        hovervar = 'country', colorvar = indicator.code,
+                        options = list(width = 500, height = 400, dataMode = 'regions'))
+
+# Разместить таблицу и карту на одной панели
+TG <- gvisMerge(g.tbl, g.chart, horizontal = TRUE,
+                 tableOptions = 'bgcolor=\"#CCCCCC\" cellspacing=10')
+TG
+```

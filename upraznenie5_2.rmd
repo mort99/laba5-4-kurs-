@@ -1,0 +1,46 @@
+---
+title: "Упражнение №5"
+author: "Маркин Артем"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Вариант - 12
+
+1. Картограмма с таблицей стран мира по показателю из базы Всемирного банка (интерактивная картограмма из примера).
+2. Карта с маркерами или с радиусами, построенная по набору данных с Портала открытых данных РФ.
+
+Задание по варианту:
+WDI: любой показатель (Абонентская плата на мобильную сотовую связь (на 100 человек)) из раздела "Infrastructure" (Инфраструктура). Портал открытых данных: Сведения о местах нахождения многоквартирных жилых домов, в которых осуществлен капитальный ремонт, по Краснодарскому краю (id: 2308078236-18dom), взять только расположенные в городе Белореченск
+
+```{r, results='asis', cache=TRUE, warning=F, message=F}
+library(leaflet)
+fileURL <-'./data/DOM.png'
+pharm.icon <- makeIcon(iconUrl = fileURL,
+                      iconWidth = 31,
+                      iconHeight = 31,
+                      iconAnchorX = 31,
+                      iconAnchorY = 31)
+
+fileURL <- './data/Portal_RF.csv'
+doc <- read.csv2(fileURL, stringsAsFactors = F)
+
+doc$lat <- as.numeric(doc$lat)
+doc$long <- as.numeric(doc$long)
+
+# Подпись к объектам
+map.sites <- paste0(doc$number, '</br>',
+                    doc$dep_name, '</br>',
+                    doc$num_cat,'</br>',
+                    doc$data_name)
+
+# Создаем виджет с картой
+myMap <- doc %>% leaflet(width =800, height =800) %>%
+  addTiles() %>% addMarkers(icon = pharm.icon, popup = map.sites)
+
+myMap
+```
